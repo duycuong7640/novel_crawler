@@ -27,7 +27,9 @@ RUN apk update && apk upgrade && \
     libxrender \
     libxtst \
     pango \
-    xorg-server
+    xorg-server \
+    udev \
+    ttf-opensans
 
 WORKDIR /var/www
 
