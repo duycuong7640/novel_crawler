@@ -14,8 +14,6 @@ RUN apk update && apk upgrade && \
     harfbuzz \
     ttf-freefont \
     alsa-lib \
-    atk \
-    cups-libs \
     gtk+3.0 \
     libxcomposite \
     libx11 \
@@ -29,7 +27,8 @@ RUN apk update && apk upgrade && \
     pango \
     xorg-server \
     udev \
-    ttf-opensans
+    ttf-opensans \
+    dumb-init
 
 WORKDIR /var/www
 
