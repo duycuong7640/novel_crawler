@@ -362,7 +362,15 @@ export class CrawlerService {
   ): Promise<boolean> {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      // args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--no-zygote',
+        '--single-process',
+      ],
     });
     const page = await browser.newPage();
     await page.setUserAgent(
