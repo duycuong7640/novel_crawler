@@ -1,0 +1,28 @@
+version: '3.5'
+
+#networks:
+#  dic_novel_backend:
+#    driver: bridge
+#    ipam:
+#      config:
+#        - subnet: 174.23.0.0/16
+#          gateway: 174.23.5.254
+
+services:
+  api:
+    build:
+      context: ./
+      dockerfile: ./docker/api/Dockerfile
+    container_name: dicnovel_crawler
+    ports:
+      - ${PORT}:${PORT}
+    networks:
+      - dicnovel_backend
+    volumes:
+      - ./:/var/www
+      - /var/www/node_modules
+      - /var/www/dist
+
+networks:
+  dicnovel_backend:
+    external: true
