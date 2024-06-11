@@ -415,24 +415,32 @@ export class CrawlerService {
 
       if (productChapters && productChapters.length) {
         for (let i = 0; i < productChapters.length; i++) {
-          const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-          });
-          const page = await browser.newPage();
+          try {
+            const browser = await puppeteer.launch({
+              headless: true,
+              args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            });
+            const page = await browser.newPage();
 
-          // Clear browser cache
-          const client = await page.target().createCDPSession();
-          await client.send('Network.clearBrowserCache');
+            // Clear browser cache
+            const client = await page.target().createCDPSession();
+            await client.send('Network.clearBrowserCache');
 
-          await page.setUserAgent(
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-          );
-          await page.setJavaScriptEnabled(true);
+            await page.setUserAgent(
+              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            );
+            await page.setJavaScriptEnabled(true);
 
-          await this.getDetailProductChapter(productChapters[i], browser, page);
+            await this.getDetailProductChapter(
+              productChapters[i],
+              browser,
+              page,
+            );
 
-          await page.close();
+            await page.close();
+          } catch (e) {
+            console.log('....');
+          }
         }
       } else {
         break;
@@ -489,7 +497,7 @@ export class CrawlerService {
       return true;
     } catch (e) {
       console.log(e);
-      return false;
+      return true;
     }
   }
 }
