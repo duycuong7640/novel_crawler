@@ -410,7 +410,6 @@ export class CrawlerService {
           is_crawler_chapter: false,
           status: 1,
         },
-        order: { id: 'ASC' },
         take: 20,
       });
 
