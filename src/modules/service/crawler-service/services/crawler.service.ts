@@ -496,6 +496,7 @@ export class CrawlerService {
       // await new Promise((resolve) => setTimeout(resolve, 1000));
       return true;
     } catch (e) {
+      console.log(productChapter.url_mtlnovel_com);
       console.log(e);
       return true;
     }
