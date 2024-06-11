@@ -372,7 +372,7 @@ export class CrawlerService {
     const productChapters = await this.productChapterRepository.find({
       where: {
         is_crawler_chapter: false,
-        is_content_null: false,
+        status: 1,
       },
       skip: offset,
       take: parseInt(limit),
@@ -433,7 +433,7 @@ export class CrawlerService {
         console.log('is_content_null');
         productChapter.created_at = new Date();
         productChapter.updated_at = new Date();
-        productChapter.is_content_null = true;
+        productChapter.status = 2;
         await this.productChapterRepository.save(productChapter);
 
         const entity = await this.productRepository.findOneBy({
