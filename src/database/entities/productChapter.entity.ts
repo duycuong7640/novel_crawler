@@ -40,6 +40,9 @@ export class ProductChapter {
   is_crawler_chapter: boolean;
 
   @Column()
+  is_content_null: boolean;
+
+  @Column()
   status: number;
 
   @Column()

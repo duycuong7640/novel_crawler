@@ -372,6 +372,7 @@ export class CrawlerService {
     const productChapters = await this.productChapterRepository.find({
       where: {
         is_crawler_chapter: false,
+        is_content_null: false,
       },
       skip: offset,
       take: parseInt(limit),
@@ -429,8 +430,19 @@ export class CrawlerService {
           await this.productRepository.save(entity);
         }
       } else {
+        console.log('is_content_null');
         productChapter.created_at = new Date();
         productChapter.updated_at = new Date();
+        productChapter.is_content_null = true;
+        await this.productChapterRepository.save(productChapter);
+
+        const entity = await this.productRepository.findOneBy({
+          id: productChapter.product_id,
+        });
+        if (entity) {
+          entity.updated_at = new Date();
+          await this.productRepository.save(entity);
+        }
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
