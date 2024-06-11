@@ -360,24 +360,6 @@ export class CrawlerService {
     pageS: string,
     limit: string,
   ): Promise<boolean> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      // args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--no-zygote',
-        '--single-process',
-      ],
-    });
-    const page = await browser.newPage();
-    await page.setUserAgent(
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-    );
-    await page.setJavaScriptEnabled(true);
-
     // const productChapters = await this.productChapterRepository.find({
     //   where: {
     //     is_crawler_chapter: false,
@@ -396,10 +378,25 @@ export class CrawlerService {
     });
 
     for (let i = 0; i < productChapters.length; i++) {
-      await this.getDetailProductChapter(productChapters[i], browser, page);
-    }
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+      const page = await browser.newPage();
 
-    await page.close();
+      // Clear browser cache
+      const client = await page.target().createCDPSession();
+      await client.send('Network.clearBrowserCache');
+
+      await page.setUserAgent(
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+      );
+      await page.setJavaScriptEnabled(true);
+
+      await this.getDetailProductChapter(productChapters[i], browser, page);
+
+      await page.close();
+    }
 
     return true;
   }
@@ -411,6 +408,7 @@ export class CrawlerService {
   ) {
     try {
       await page.goto(productChapter.url_mtlnovel_com);
+
       await page.waitForSelector('.post-content .par');
       const content = await page.evaluate(() => {
         return document.querySelector('.post-content .par').innerHTML;
@@ -430,9 +428,12 @@ export class CrawlerService {
           entity.updated_at = new Date();
           await this.productRepository.save(entity);
         }
+      } else {
+        productChapter.created_at = new Date();
+        productChapter.updated_at = new Date();
       }
 
-      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return true;
     } catch (e) {
       console.log(e);
