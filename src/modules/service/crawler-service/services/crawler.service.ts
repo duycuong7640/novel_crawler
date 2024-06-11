@@ -69,6 +69,7 @@ export class CrawlerService {
 
     return true;
   }
+
   async getPagesData(browser, link) {
     try {
       const page = await browser.newPage();
@@ -135,6 +136,7 @@ export class CrawlerService {
       return false;
     }
   }
+
   async getDetailProducts(): Promise<boolean> {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
@@ -155,6 +157,7 @@ export class CrawlerService {
 
     return true;
   }
+
   async getDetailProduct(product: Product, browser: any, page: any) {
     try {
       await page.goto(product.url_mtlnovel_com);
@@ -288,6 +291,7 @@ export class CrawlerService {
       return false;
     }
   }
+
   async getProductChapters(product: Product, browser: any, page: any) {
     try {
       await page.goto(`${product.url_mtlnovel_com}chapter-list/`);
@@ -356,6 +360,7 @@ export class CrawlerService {
       return false;
     }
   }
+
   async getDetailProductChapters(
     pageS: string,
     limit: string,
@@ -368,35 +373,71 @@ export class CrawlerService {
     //   take: 8000,
     // });
 
-    const offset = (parseInt(pageS) - 1) * parseInt(limit);
-    const productChapters = await this.productChapterRepository.find({
-      where: {
-        is_crawler_chapter: false,
-        status: 1,
-      },
-      skip: offset,
-      take: parseInt(limit),
-    });
+    // const offset = (parseInt(pageS) - 1) * parseInt(limit);
+    // const productChapters = await this.productChapterRepository.find({
+    //   where: {
+    //     is_crawler_chapter: false,
+    //     status: 1,
+    //   },
+    //   skip: offset,
+    //   take: parseInt(limit),
+    // });
+    //
+    // for (let i = 0; i < productChapters.length; i++) {
+    //   const browser = await puppeteer.launch({
+    //     headless: true,
+    //     args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    //   });
+    //   const page = await browser.newPage();
+    //
+    //   // Clear browser cache
+    //   const client = await page.target().createCDPSession();
+    //   await client.send('Network.clearBrowserCache');
+    //
+    //   await page.setUserAgent(
+    //     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    //   );
+    //   await page.setJavaScriptEnabled(true);
+    //
+    //   await this.getDetailProductChapter(productChapters[i], browser, page);
+    //
+    //   await page.close();
+    // }
 
-    for (let i = 0; i < productChapters.length; i++) {
-      const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    while (true) {
+      const productChapters = await this.productChapterRepository.find({
+        where: {
+          is_crawler_chapter: false,
+          status: 1,
+        },
+        order: { id: 'ASC' },
+        take: 20,
       });
-      const page = await browser.newPage();
 
-      // Clear browser cache
-      const client = await page.target().createCDPSession();
-      await client.send('Network.clearBrowserCache');
+      if (productChapters && productChapters.length) {
+        for (let i = 0; i < productChapters.length; i++) {
+          const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          });
+          const page = await browser.newPage();
 
-      await page.setUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-      );
-      await page.setJavaScriptEnabled(true);
+          // Clear browser cache
+          const client = await page.target().createCDPSession();
+          await client.send('Network.clearBrowserCache');
 
-      await this.getDetailProductChapter(productChapters[i], browser, page);
+          await page.setUserAgent(
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          );
+          await page.setJavaScriptEnabled(true);
 
-      await page.close();
+          await this.getDetailProductChapter(productChapters[i], browser, page);
+
+          await page.close();
+        }
+      } else {
+        break;
+      }
     }
 
     return true;
@@ -445,7 +486,7 @@ export class CrawlerService {
         }
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
       return true;
     } catch (e) {
       console.log(e);
