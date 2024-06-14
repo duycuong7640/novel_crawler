@@ -20,6 +20,8 @@ import {
 import { InjectQueue } from '@nestjs/bull';
 import { CrawlerJobType } from '../../../../constants/job/crawler-job-type';
 import { Queue } from 'bull';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class CrawlerService {
@@ -421,15 +423,25 @@ export class CrawlerService {
       let flag = true;
       for (let i = 0; i < productChapters.length; i++) {
         try {
+          const userDataDir = path.join(__dirname, 'tmp_user_data');
+
           const browser = await puppeteer.launch({
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
+            userDataDir: userDataDir,
           });
+
           const page = await browser.newPage();
 
           // Clear browser cache
           const client = await page.target().createCDPSession();
           await client.send('Network.clearBrowserCache');
+
+          // Clear storage
+          await client.send('Storage.clearDataForOrigin', {
+            origin: '*',
+            storageTypes: 'all',
+          });
 
           await page.setUserAgent(
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
@@ -439,6 +451,9 @@ export class CrawlerService {
           await this.getDetailProductChapter(productChapters[i], browser, page);
 
           await page.close();
+
+          fs.rmSync(userDataDir, { recursive: true, force: true });
+
           flag = true;
         } catch (e) {
           console.log(productChapters[i].url_mtlnovel_com);
