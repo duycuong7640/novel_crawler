@@ -410,6 +410,14 @@ export class CrawlerService {
     //   await page.close();
     // }
 
+    const agents = [
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+      'Mozilla/5.0 (iPad; CPU OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/79.0.3945.73 Mobile/15E148 Safari/604.1',
+    ];
+    const randomAgent = agents[Math.floor(Math.random() * agents.length)];
+
     // while (true) {
     const productChapters = await this.productChapterRepository.find({
       where: {
@@ -423,12 +431,12 @@ export class CrawlerService {
       let flag = true;
       for (let i = 0; i < productChapters.length; i++) {
         try {
-          const userDataDir = path.join(__dirname, 'tmp_user_data');
+          // const userDataDir = path.join(__dirname, 'tmp_user_data');
 
           const browser = await puppeteer.launch({
             headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            userDataDir: userDataDir,
+            // userDataDir: userDataDir,
           });
 
           const page = await browser.newPage();
@@ -444,8 +452,15 @@ export class CrawlerService {
             storageTypes: 'all',
           });
 
+          await client.send('Network.setCacheDisabled', {
+            cacheDisabled: true,
+          });
+
+          await page.setCacheEnabled(false);
+
           await page.setUserAgent(
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+            randomAgent,
+            // 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
           );
           await page.setJavaScriptEnabled(true);
 
@@ -453,7 +468,9 @@ export class CrawlerService {
 
           await page.close();
 
-          fs.rmSync(userDataDir, { recursive: true, force: true });
+          // if (fs.existsSync(userDataDir)) {
+          //   fs.rmSync(userDataDir, { recursive: true, force: true });
+          // }
 
           flag = true;
         } catch (e) {
