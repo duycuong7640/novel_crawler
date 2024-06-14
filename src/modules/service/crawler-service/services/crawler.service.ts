@@ -454,7 +454,7 @@ export class CrawlerService {
           {},
           {
             removeOnComplete: true,
-            delay: 100000,
+            delay: 200000,
             removeOnFail: true,
           },
         );
