@@ -436,6 +436,7 @@ export class CrawlerService {
           // Clear browser cache
           const client = await page.target().createCDPSession();
           await client.send('Network.clearBrowserCache');
+          await client.send('Network.clearBrowserCookies');
 
           // Clear storage
           await client.send('Storage.clearDataForOrigin', {
