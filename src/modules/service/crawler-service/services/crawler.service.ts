@@ -17,7 +17,9 @@ import {
   Category,
   TABLE_CATEGORY,
 } from '../../../../database/entities/category.entity';
-import { posix } from 'rimraf';
+import { InjectQueue } from '@nestjs/bull';
+import { CrawlerJobType } from '../../../../constants/job/crawler-job-type';
+import { Queue } from 'bull';
 
 @Injectable()
 export class CrawlerService {
@@ -32,6 +34,8 @@ export class CrawlerService {
     @InjectRepository(Author)
     private authorRepository: Repository<Author>,
     private generatorService: GeneratorService,
+    @InjectQueue(CrawlerJobType.QUERY_JOBS.NAME)
+    private readonly usedQueue: Queue,
   ) {}
 
   async getListProducts(): Promise<boolean> {
@@ -404,50 +408,62 @@ export class CrawlerService {
     //   await page.close();
     // }
 
-    while (true) {
-      const productChapters = await this.productChapterRepository.find({
-        where: {
-          is_crawler_chapter: false,
-          status: 1,
-        },
-        take: 20,
-      });
+    // while (true) {
+    const productChapters = await this.productChapterRepository.find({
+      where: {
+        is_crawler_chapter: false,
+        status: 1,
+      },
+      take: 20,
+    });
 
-      if (productChapters && productChapters.length) {
-        for (let i = 0; i < productChapters.length; i++) {
-          try {
-            const browser = await puppeteer.launch({
-              headless: true,
-              args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            });
-            const page = await browser.newPage();
+    if (productChapters && productChapters.length) {
+      let flag = true;
+      for (let i = 0; i < productChapters.length; i++) {
+        try {
+          const browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          });
+          const page = await browser.newPage();
 
-            // Clear browser cache
-            const client = await page.target().createCDPSession();
-            await client.send('Network.clearBrowserCache');
+          // Clear browser cache
+          const client = await page.target().createCDPSession();
+          await client.send('Network.clearBrowserCache');
 
-            await page.setUserAgent(
-              'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-            );
-            await page.setJavaScriptEnabled(true);
+          await page.setUserAgent(
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          );
+          await page.setJavaScriptEnabled(true);
 
-            await this.getDetailProductChapter(
-              productChapters[i],
-              browser,
-              page,
-            );
+          await this.getDetailProductChapter(productChapters[i], browser, page);
 
-            await page.close();
-          } catch (e) {
-            console.log(productChapters[i].url_mtlnovel_com);
-            console.log(e);
-            console.log('....');
-          }
+          await page.close();
+          flag = true;
+        } catch (e) {
+          console.log(productChapters[i].url_mtlnovel_com);
+          console.log(e);
+          console.log('....');
+          flag = false;
         }
-      } else {
-        break;
+      }
+
+      if (flag) {
+        await this.usedQueue.add(
+          CrawlerJobType.QUERY_JOBS.CREATE_CRAWLER_JOB,
+          {},
+          {
+            removeOnComplete: true,
+            delay: 100000,
+            removeOnFail: true,
+          },
+        );
       }
     }
+    // else {
+    //   break;
+    // }
+    // }
 
     return true;
   }
