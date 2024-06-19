@@ -22,6 +22,7 @@ import { CrawlerJobType } from '../../../../constants/job/crawler-job-type';
 import { Queue } from 'bull';
 import * as path from 'path';
 import * as fs from 'fs';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class CrawlerService {
@@ -367,6 +368,7 @@ export class CrawlerService {
     }
   }
 
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async getDetailProductChapters(
     pageS: string,
     limit: string,
@@ -481,17 +483,17 @@ export class CrawlerService {
         }
       }
 
-      if (flag) {
-        await this.usedQueue.add(
-          CrawlerJobType.QUERY_JOBS.CREATE_CRAWLER_JOB,
-          {},
-          {
-            removeOnComplete: true,
-            delay: 200000,
-            removeOnFail: true,
-          },
-        );
-      }
+      // if (flag) {
+      //   await this.usedQueue.add(
+      //     CrawlerJobType.QUERY_JOBS.CREATE_CRAWLER_JOB,
+      //     {},
+      //     {
+      //       removeOnComplete: true,
+      //       delay: 200000,
+      //       removeOnFail: true,
+      //     },
+      //   );
+      // }
     }
     // else {
     //   break;

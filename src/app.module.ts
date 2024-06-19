@@ -17,13 +17,13 @@ import { BadRequestFilter } from './filters/bad-request.filter';
         configService.databaseConfig,
       inject: [ApiConfigService],
     }),
-    BullModule.forRootAsync({
-      imports: [SharedModule],
-      useFactory: (configService: ApiConfigService) => ({
-        redis: configService.redisConfig,
-      }),
-      inject: [ApiConfigService],
-    }),
+    // BullModule.forRootAsync({
+    //   imports: [SharedModule],
+    //   useFactory: (configService: ApiConfigService) => ({
+    //     redis: configService.redisConfig,
+    //   }),
+    //   inject: [ApiConfigService],
+    // }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'client'),
       renderPath: '/public/*',
